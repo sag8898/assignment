@@ -18,11 +18,11 @@ TECHNICAL_SIGNALS = [
     r'\b(python|javascript|typescript|java|go|rust|c\+\+|node\.js|react|vue|angular)\b',
     r'\b(database|sql|nosql|mongodb|postgres|redis|elasticsearch|kafka|rabbitmq)\b',
     r'\b(microservice|serverless|lambda|azure function|cloud function|endpoint|payload)\b',
-    r'\b(debug|logs|trace|breakpoint|profil|benchmark|latency|throughput|p99|p95)\b',
-    r'\b(version|release|changelog|migration|schema|query|index|partition)\b',
+    r'\b(debug|logs|trace|breakpoint|profiling|latency|throughput|p99|p95)\b',
+    r'\b(schema|query|index|partition|sharding|clustering)\b',
     r'\b(dependency|library|package|module|namespace|import|export)\b',
     r'\b(regex|algorithm|data structure|cache|hash|token|encoding|utf-8)\b',
-    r'\b(repository|branch|commit|pull request|merge|rebase|revert)\b',
+    r'\b(repository|branch|commit|pull request|merge|rebase|revert|git)\b',
     r'\b(environment variable|env|config|yaml|toml|ini|dotenv)\b',
     r'\b(rate limit|timeout|retry|exponential backoff|circuit breaker)\b',
     # Asking for technical details
@@ -34,15 +34,15 @@ EXECUTIVE_SIGNALS = [
     r'\b(roi|kpi|kpis|revenue|cost reduction|savings|budget|quarter|quarterly|fiscal)\b',
     r'\b(sla|slo|sli|compliance|regulatory|audit|governance|risk|mitigation)\b',
     r'\b(stakeholder|board|c-suite|cio|cto|ceo|vp |vice president)\b',
-    r'\b(enterprise|customer acquisition|churn|retention|growth|scalability)\b',
-    r'\b(contract|renewals|licensing|subscription|tier|plan|pricing)\b',
-    r'\b(report|dashboard|analytics|insights|metrics|performance)\b',
-    r'\b(business impact|downtime cost|productivity|efficiency|streamline)\b',
-    r'\b(vendor|partner|integration|procurement|onboarding|roadmap)\b',
-    r'\b(team|department|organization|cross-functional|alignment|strategy)\b',
+    r'\b(enterprise|customer acquisition|churn|retention|growth|scalability|market share)\b',
+    r'\b(contract|renewals|licensing|subscription|tier|plan|pricing|billing)\b',
+    r'\b(report|dashboard|analytics|insights|metrics|performance|quarterly)\b',
+    r'\b(business impact|downtime cost|productivity|efficiency|streamline|roi)\b',
+    r'\b(vendor|partner|integration|procurement|onboarding|roadmap|strategy)\b',
+    r'\b(team|department|organization|cross-functional|alignment|leadership)\b',
     r'\b(invest|investment|cost-benefit|return|total cost of ownership|tco)\b',
     r'\b(market|competitive|benchmark|industry standard|best practice)\b',
-    r'\b(timeline|deadline|milestone|deliverable|launch|rollout)\b',
+    r'\b(timeline|deadline|milestone|deliverable|launch|rollout|budget)\b',
     # Formal tone indicators
     r'\b(please provide|kindly|at your earliest|i would like to)\b',
     r'\b(per our|as per|pursuant to|in accordance with)\b',
@@ -50,20 +50,21 @@ EXECUTIVE_SIGNALS = [
 
 FRUSTRATION_SIGNALS = [
     # Explicit frustration
-    r'\b(frustrated|annoyed|angry|furious|livid|upset|outraged|ridiculous|unacceptable)\b',
-    r'\b(useless|broken|terrible|horrible|worst|awful|pathetic|garbage)\b',
-    r'\b(fed up|sick of|tired of|had enough|done with|give up)\b',
-    r'\b(waste of time|wasting my time|not working|keeps failing|still broken)\b',
-    r'\b(not helping|doesn\'t help|no help|useless support|terrible service)\b',
-    # Repeated contact signals
-    r'\b(again|third time|multiple times|keep contacting|repeatedly|nth time)\b',
-    r'\b(still not fixed|still having|still broken|still failing|still the same)\b',
+    r'\b(?:frustrat(?:ed|ing)|annoy(?:ed|ing)|angry|furi(?:ous|ly)|livid|upset|outrag(?:ed|eous)|ridiculous|unacceptable)\b',
+    r'\b(?:useless|broken|terrible|horrible|worst|awful|pathetic|garbage|crap|junk)\b',
+    r'\b(?:unhappy|disappointed|dissatisfied|complaint|regret|cancel|refund)\b',
+    r'\b(?:fed up|sick of|tired of|had enough|done with|give up)\b',
+    r'\b(?:waste of time|wasting my time|not working|keeps failing|still broken)\b',
+    r'\b(?:not helping|doesn\'t help|no help|useless support|terrible service)\b',
+    # Repeated contact signals (only if multiple)
+    r'\b(?:third time|multiple times|keep contacting|repeatedly|nth time|again and again)\b',
+    r'\b(?:still not fixed|still having|still broken|still failing|still the same)\b',
     # Urgency signals (only strong frustration markers, not business terms)
-    r'\b(immediately|right now|asap|emergency|down|outage)\b',
-    r'\b(losing money|lost data|cannot work|blocked|production down)\b',
-    # Exclamation usage
+    r'\b(?:immediately|right now|asap|emergency|down|outage)\b',
+    r'\b(?:losing money|lost data|cannot work|blocked|production down)\b',
+    # Exclamation usage (only multiple or strong markers)
     r'!{2,}',  # Multiple exclamations
-    r'\b(why|WHY|WTF|WTH|what the|seriously)\b',
+    r'\b(?:WTF|WTH|what the|seriously)\b',
 ]
 
 
@@ -141,11 +142,12 @@ def detect_persona(message: str, conversation_history: List[str] = None) -> Pers
     frustration_score = _calculate_frustration_score(message, conversation_history)
 
     # Scores – apply multipliers so domain-specific signals beat generic patterns
+    # Increased baseline for general_user to avoid "trigger-happy" detection
     scores = {
-        PersonaType.TECHNICAL_EXPERT: tech_count * 1.5,
-        PersonaType.BUSINESS_EXECUTIVE: exec_count * 1.5,
-        PersonaType.FRUSTRATED_USER: frust_count + (frustration_score * 3),
-        PersonaType.GENERAL_USER: 1,  # baseline fallback
+        PersonaType.TECHNICAL_EXPERT: tech_count * 2.5,
+        PersonaType.BUSINESS_EXECUTIVE: exec_count * 2.5,
+        PersonaType.FRUSTRATED_USER: (frust_count * 2.0) + (frustration_score * 3.0),
+        PersonaType.GENERAL_USER: 2.0,  # lower than before but still solid
     }
 
     # Select dominant persona
