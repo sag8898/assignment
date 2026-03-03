@@ -377,7 +377,12 @@ KNOWLEDGE_BASE = [
 
 def _calculate_relevance(query: str, article: dict) -> float:
     """Calculate relevance score using keyword matching."""
-    query_words = set(re.findall(r'\b\w+\b', query.lower()))
+    STOP_WORDS = {'a', 'an', 'the', 'and', 'or', 'but', 'if', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'in', 'on', 'at', 'to', 'for', 'with', 'by', 'about', 'as', 'into', 'through', 'of', 'it', 'its', 'they', 'them', 'their', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'i', 'me', 'my', 'we', 'our', 'us', 'you', 'your', 'he', 'she', 'him', 'her', 'it'}
+    
+    query_words = set(w for w in re.findall(r'\b\w+\b', query.lower()) if w not in STOP_WORDS)
+    if not query_words:
+        return 0.0
+        
     query_str = query.lower()
     score = 0.0
 
@@ -413,7 +418,8 @@ def search_knowledge_base(
 
     for article in KNOWLEDGE_BASE:
         relevance = _calculate_relevance(query, article)
-        if relevance < 0.05:
+        # Higher threshold to avoid noise on conversational messages
+        if relevance < 0.2:
             continue
 
         # Category filter

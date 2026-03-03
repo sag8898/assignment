@@ -2,6 +2,7 @@
 Response Generation Service
 Generates persona-adaptive responses using tone templates and KB content.
 """
+import re
 from typing import List
 from models.schemas import PersonaType, KnowledgeBaseResult
 
@@ -135,10 +136,28 @@ def generate_response(
 ) -> tuple[str, List[str]]:
     """
     Generate a persona-adapted response.
-
-    Returns:
-        (response_text, suggestions_list)
     """
+    # ─── 1. Identify "Conversational" or "Greeting" messages ───
+    # These shouldn't have heavy KB articles or long follow-ups if they are just basic chat
+    greeting_patterns = [
+        r'\b(hi|hello|hey|greetings|morning|afternoon|evening)\b',
+        r'\b(how are you|how is it going|what\'s up|sup)\b',
+        r'\b(thanks?|thank you|thx|cool|ok|okay|fine|awesome|great)\b',
+    ]
+    is_greeting = any(re.search(pattern, message.lower()) for pattern in greeting_patterns)
+    
+    conversational_patterns = greeting_patterns + [
+        r'\b(who are you|what can you do|how do you work)\b',
+    ]
+    is_conversational = any(re.search(pattern, message.lower()) for pattern in conversational_patterns)
+    
+    message_length = len(message.split())
+    
+    # If the message is VERY short (like "hi" or "ok"), treat as conversational
+    # But if there's a KB article and it's NOT a greeting, we should probably show it
+    if message_length <= 2 and not kb_articles:
+        is_conversational = True
+
     tone_config = PERSONA_TONES[persona]
 
     # Pick greeting
@@ -147,7 +166,7 @@ def generate_response(
     greeting = tone_config["greeting_variants"][idx]
 
     # Build response body
-    if kb_articles:
+    if kb_articles and not is_greeting:
         # Use the top KB article as the main response
         top_article = kb_articles[0]
         response_body = (
@@ -162,18 +181,30 @@ def generate_response(
             for article in kb_articles[1:]:
                 related += f"- 📄 **{article.title}** ({article.category})\n"
             response_body += related
-    else:
+            
+        # Add persona-specific follow-up
+        response_body += tone_config["follow_up"]
+    elif should_escalate:
+        # If escalating, give a direct empathetic greeting and skip KB
         response_body = f"{greeting}\n\n{NO_KB_RESPONSES[persona]}"
+    else:
+        # Generic/Conversational response
+        if is_conversational:
+            # Simple short responses for chat
+            if persona == PersonaType.FRUSTRATED_USER:
+                response_body = greeting # Keep it simple and focused on fixing things
+            else:
+                response_body = f"{greeting}\n\nHow can I assist you further today?"
+        else:
+            response_body = f"{greeting}\n\n{NO_KB_RESPONSES[persona]}"
+            response_body += tone_config["follow_up"]
 
-    # Add persona-specific follow-up
-    response_body += tone_config["follow_up"]
-
-    # Add escalation notice
+    # Add escalation notice (always show if triggered)
     if should_escalate:
         response_body += ESCALATION_MESSAGES[persona]
 
     # Generate suggestions
-    suggestions = _generate_suggestions(persona, kb_articles, frustration_score)
+    suggestions = _generate_suggestions(persona, kb_articles if not is_conversational else [], frustration_score)
 
     return response_body, suggestions
 

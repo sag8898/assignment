@@ -1,0 +1,57 @@
+﻿INPUT: 'hi'
+HAS KB ARTICLE: False
+RESPONSE:
+Happy to help! Let me explain that clearly:
+
+How can I assist you further today?
+--------------------------------------------------
+INPUT: 'billing'
+HAS KB ARTICLE: True
+RESPONSE:
+Happy to help! Let me explain that clearly:
+
+### Billing & Subscription Management
+
+**Managing Your Subscription**
+
+You can manage your subscription anytime in **Settings  Billing**:
+
+- **View invoices:** Download PDF invoices for any billing period
+- **Update payment method:** Add/remove credit cards or bank accounts
+- **Upgrade/Downgrade:** Change your plan (takes effect next billing cycle)
+- **Cancel:** Cancel anytime  no cancellation fees
+
+Billing happens on the same date each month. Need help? Chat with us below!
+
+---
+**Related articles:**
+-  **Refund & Cancellation Policy** (Billing)
+
+
+---
+**Still have questions?** I'm right here! Feel free to ask anything else, or I can connect you with our support team for extra help. 
+--------------------------------------------------
+INPUT: 'thanks'
+HAS KB ARTICLE: False
+RESPONSE:
+Great question! Here's everything you need to know:
+
+How can I assist you further today?
+--------------------------------------------------
+INPUT: 'Connect me with a manager'
+HAS KB ARTICLE: False
+RESPONSE:
+No worries  this is easier than it looks:
+
+Hmm, I want to make sure I give you the right information! Could you share a little more detail about what you're trying to do? I'll find the best answer for you.
+
+>  **Connecting You with a Human Agent**
+> I'm bringing in a real person to help you right now! They'll have everything we've talked about so you don't have to start over. Expected wait time: **3-5 minutes.** Hang tight! 
+--------------------------------------------------
+INPUT: 'random message'
+HAS KB ARTICLE: False
+RESPONSE:
+No worries  this is easier than it looks:
+
+How can I assist you further today?
+--------------------------------------------------
