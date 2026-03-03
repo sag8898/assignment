@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.streamlit/
+.env
+.DS_Store
+.idea/
+.vscode/
+frontend/
+backend/
+main.py
+test_persona.py
+test_out.txt
